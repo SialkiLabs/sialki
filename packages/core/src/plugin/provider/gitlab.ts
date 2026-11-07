@@ -64,12 +64,19 @@ export const GitLabPlugin = define({
 
     const load = Effect.fn("GitLabPlugin.load")(function* () {
       const connection = yield* ctx.integration.connection.active(integrationID)
-      // Like v1, only stored logins drive discovery; ambient GITLAB_TOKEN users are not probed.
+      // Supports both stored logins (PAT key or OAuth) and ambient GITLAB_TOKEN from the environment.
       const stored = connection?.type === "credential" ? connection : undefined
       const credential = stored
         ? yield* ctx.integration.connection.resolve(stored).pipe(Effect.orElseSucceed(() => undefined))
         : undefined
-      if (!stored || !credential || credential.type === "external") {
+      const envToken = process.env.GITLAB_TOKEN?.trim()
+      if (!stored && !envToken) {
+        const changed = loaded.models !== undefined || loaded.connection !== undefined
+        loaded.models = undefined
+        loaded.connection = undefined
+        return changed
+      }
+      if (stored && (!credential || credential.type === "external")) {
         const changed = loaded.models !== undefined || loaded.connection !== undefined
         loaded.models = undefined
         loaded.connection = undefined
@@ -79,15 +86,15 @@ export const GitLabPlugin = define({
       const provider = yield* providers.get(providerID)
       // An OAuth login pins the instance it was issued against; prefer it over ambient defaults.
       const instanceUrl =
-        credential.type === "oauth" && typeof credential.metadata?.instanceUrl === "string"
+        credential?.type === "oauth" && typeof credential.metadata?.instanceUrl === "string"
           ? credential.metadata.instanceUrl
           : typeof provider?.settings?.instanceUrl === "string"
             ? provider.settings.instanceUrl
             : resolveDefaultInstanceUrl()
       const headers: Record<string, string> =
-        credential.type === "oauth"
+        credential?.type === "oauth"
           ? { Authorization: `Bearer ${credential.access}` }
-          : { "PRIVATE-TOKEN": credential.key }
+          : { "PRIVATE-TOKEN": credential?.type === "key" ? credential.key : envToken! }
       // The SDK owns project detection, GraphQL discovery, caching and token limits.
       const remote = yield* Effect.tryPromise({
         try: async (signal) => {
@@ -102,7 +109,7 @@ export const GitLabPlugin = define({
                 { preconnect: fetch.preconnect },
               ),
             },
-            { workingDirectory: ctx.location.directory, cacheKey: stored.id },
+            { workingDirectory: ctx.location.directory, cacheKey: stored?.id ?? "env" },
           )
         },
         catch: (cause) => cause,
@@ -126,6 +133,20 @@ export const GitLabPlugin = define({
     })
 
     yield* ctx.integration.transform((editor) => {
+      editor.method.update({
+        integrationID,
+        method: {
+          type: "key",
+          label: "Personal Access Token",
+        },
+      })
+      editor.method.update({
+        integrationID,
+        method: {
+          type: "env",
+          names: ["GITLAB_TOKEN"],
+        },
+      })
       editor.method.update({
         integrationID,
         method: {
@@ -274,13 +295,13 @@ export const GitLabPlugin = define({
           provider.settings = { ...provider.settings, ...login.settings }
         })
       const item = editor.get(providerID)
-      if (!item || !loaded.models?.length) return
+      if (!item || !loaded.connection) return
       editor.add({
         info: item.provider,
         sourceConnection: loaded.connection,
         models: [
           ...item.models.values(),
-          ...loaded.models
+          ...(loaded.models ?? [])
             .filter((model) => !item.models.has(model.id))
             .map((model) => ({
               ...Model.Info.default(providerID, Model.ID.make(model.id)),

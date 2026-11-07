@@ -231,7 +231,7 @@ export const DialogConnectProvider: Component<{
 const CLAUDE_CODE_SETUP_URL = "https://code.claude.com/docs/en/setup"
 
 // The TUI's integration groups and order, with connected integrations pulled up into their own group first.
-const POPULAR = ["anthropic", "openai", "google", "github-copilot", "openrouter", "deepseek", "ollama", "nvidia"]
+const POPULAR = ["anthropic", "openai", "google", "gitlab", "github-copilot", "openrouter", "deepseek", "ollama", "nvidia"]
 
 function ProviderPicker(props: { directory?: string; onSelect: (provider: string) => void; onPrepare?: () => void }) {
   const integrations = useIntegrations(() => props.directory)

@@ -1,7 +1,7 @@
 # PROJECT-STATE: Sialki (Autonomous Desktop AI Coding Workstation)
 
 > **Canonical Repository**: [https://github.com/SialkiLabs/sialki](https://github.com/SialkiLabs/sialki)  
-> **Workstation Path**: `C:\Users\Getko\DEVIN-VAULT\TEMPORARY-WORKSPACE\ACTIVE-PROJECTS\SOFTWARE-DEVELOPMENT\SIALKI-OS-Agent`  
+> **Workstation Path**: `C:\Users\Getko\DEVIN-VAULT\TEMPORARY-WORKSPACE\ACTIVE-PROJECTS\SOFTWARE-DEVELOPMENT\sialki`  
 > **Installed Location**: `C:\Users\Getko\AppData\Local\Programs\Sialki Beta\Sialki Beta.exe`  
 > **System CLI Binary**: `C:\Users\Getko\.sialki\bin\sialki.exe` (`sialki v1.0.1`)  
 > **Owner & Architect**: George AK Neihsial (Product Architect & System Engineer)  

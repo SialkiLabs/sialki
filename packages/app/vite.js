@@ -116,7 +116,7 @@ export default [
           format: "es",
         },
         optimizeDeps: {
-          exclude: [...workerDeps, ...officeDeps],
+          exclude: [...workerDeps, ...officeDeps, "@opencode/ui", "@opencode/app"],
           rolldownOptions: { plugins: [bundleNestedWorkerDeps, skipComponentsLab] },
         },
       }
